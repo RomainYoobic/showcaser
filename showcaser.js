@@ -3,7 +3,7 @@
     Select the root node of the component you want to make a story of
     Call 'showcaser($0, false)' if you want the story without the 'items' fields or 'showcaser($0, true)' if you want them (could be useful for large data)
 
-    You'll probably need to format properly the file and bring some fixes (this script is far from being perfect)
+    You'll probably need to format properly the file and bring some fixes (this script is really far from being perfect)
 */
 
 
@@ -14,8 +14,8 @@ function data(node, currentState, attrsFunctions, items) {
         attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length, items));
         console.log(attrsFunctions);
     };
-    currentState.push(`  { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + ` } }
-    `);
+    currentState.push(`
+    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent === "" ? "" : ", textContent: '" + node.textContent + "'") + ` } }`);
     for (let i = 0; i < node.children.length; i++) {
         data(node.children[i], currentState, attrsFunctions);
     }
@@ -88,8 +88,7 @@ function writeShowcaseFile(data) {
         grid.rows = [
           {
             items: [
-              [ 
-                ${data[0]}
+              [${data[0]}
               ]
             ]
           }
