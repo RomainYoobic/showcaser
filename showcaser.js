@@ -1,7 +1,7 @@
 /*
     Copy all the functions in your chrome console.
     Select the root node of the component you want to make a story of
-    Call 'showcaser($0, false)' if you want the story with the 'items' fields or 'showcaser($0, true)' if you want them (could be useful for large data)
+    Call 'showcaser($0, false)' if you want the story without the 'items' fields or 'showcaser($0, true)' if you want them (could be useful for large data)
 
     You'll probably need to format properly the file and bring some fixes (this script is far from being perfect)
 */
