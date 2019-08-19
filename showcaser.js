@@ -5,7 +5,8 @@ function data(node, currentState, attrsFunctions, items) {
         attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length, items));
         console.log(attrsFunctions);
     };
-    currentState.push(`{ isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + ` } }`);
+    currentState.push(`  { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + ` } }
+    `);
     for (let i = 0; i < node.children.length; i++) {
         data(node.children[i], currentState, attrsFunctions);
     }
@@ -13,14 +14,18 @@ function data(node, currentState, attrsFunctions, items) {
 };
 
 function getAttrs(node) {
-    return Object.keys(customElements.get(node.tagName.toLowerCase()).prototype).reduce((state, key) => ({ ...state, [key]: node[key] }), {});
+    let attrs = {};
+    try{
+        attrs = Object.keys(customElements.get(node.tagName.toLowerCase()).prototype).reduce((state, key) => ({ ...state, [key]: node[key] }), {});
+    }catch(err){}
+    return attrs;
 }
 
 function createAttrsFunction(node, attrs, number, items) {
     return `
-        function get`+ toCamelCase(node.tagName) + number + `Attrs(): Components.` + toCamelCase(node.tagName) + ` {
-            return `+ attrsToString(attrs, items) + `;
-        }
+    function get`+ toCamelCase(node.tagName) + number + `Attrs(): Components.` + toCamelCase(node.tagName) + ` {
+        return `+ attrsToString(attrs, items) + `;
+    }
     `;
 };
 
@@ -36,30 +41,23 @@ function attrsToString(attrs, items) {
             return;
         }
         let value = undefined;
-        console.log(key);
-        console.log(attrs[key]);
         switch (typeof attrs[key]) {
             case 'object':
-                console.log('object');
                 value = attrsToString(attrs[key], items);
                 break;
             case 'function':
-                console.log('function');
                 value = undefined;
                 break;
             case 'string':
-                console.log('string');
                 value = "'" + attrs[key] + "'";
                 break;
             default:
-                console.log('default');
                 value = attrs[key];
                 break;
         }
         string += "'" + key + "'" + ': ' + value + ', ';
     });
     string += ' }';
-    console.log("returning : " + string);
     return string;
 }
 
@@ -81,7 +79,9 @@ function writeShowcaseFile(data) {
         grid.rows = [
           {
             items: [
-              ${data[0]}
+              [ 
+                ${data[0]}
+              ]
             ]
           }
         ];
