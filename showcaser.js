@@ -15,7 +15,7 @@ function data(node, currentState, attrsFunctions, items) {
         console.log(attrsFunctions);
     };
     currentState.push(`
-    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent === "" ? "" : ", textContent: '" + node.textContent + "'") + ` } }`);
+    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() === "" ? "" : ", textContent: '" + node.textContent + "'") + ` } }`);
     for (let i = 0; i < node.children.length; i++) {
         data(node.children[i], currentState, attrsFunctions);
     }
@@ -43,30 +43,55 @@ function toCamelCase(name) {
 };
 
 function attrsToString(attrs, items) {
-    let string = '{ ';
-    Object.keys(attrs).forEach((key) => {
-        if ((!items && key === 'items') || attrs[key] === null) {
-            string += key + ': null, ';
-            return;
-        }
-        let value = undefined;
-        switch (typeof attrs[key]) {
-            case 'object':
-                value = attrsToString(attrs[key], items);
-                break;
-            case 'function':
-                value = undefined;
-                break;
-            case 'string':
-                value = "'" + attrs[key] + "'";
-                break;
-            default:
-                value = attrs[key];
-                break;
-        }
-        string += "'" + key + "'" + ': ' + value + ', ';
-    });
-    string += ' }';
+    let string;
+    if(Array.isArray(attrs)){
+        string = '[ '
+        attrs.forEach((el) => {
+            let value = undefined;
+            switch (typeof el) {
+                case 'object':
+                    value = attrsToString(el, items);
+                    break;
+                case 'function':
+                    value = undefined;
+                    break;
+                case 'string':
+                    value = "'" + el + "'";
+                    break;
+                default:
+                    value = el;
+                    break;
+            }
+            string += value + ', ';
+        });
+        string += ' ]';
+    }else{
+        string = '{ ';
+        Object.keys(attrs).forEach((key) => {
+            if ((!items && key === 'items') || attrs[key] === null) {
+                string += key + ': null, ';
+                return;
+            }
+            let value = undefined;
+            switch (typeof attrs[key]) {
+                case 'object':
+                    value = attrsToString(attrs[key], items);
+                    break;
+                case 'function':
+                    value = undefined;
+                    break;
+                case 'string':
+                    value = "'" + attrs[key] + "'";
+                    break;
+                default:
+                    value = attrs[key];
+                    break;
+            }
+            string += "'" + key + "'" + ': ' + value + ', ';
+        });
+        string += ' }';
+    }
+    
     return string;
 }
 
