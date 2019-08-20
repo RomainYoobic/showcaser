@@ -1,18 +1,17 @@
 /*
     Copy all the functions in your chrome console.
     Select the root node of the component you want to make a story of
-    Call 'showcaser($0, false)' if you want the story without the 'items' fields or 'showcaser($0, true)' if you want them (could be useful for large data)
+    Call 'showcaser($0)' in the chrome console
 
     You'll probably need to format properly the file and bring some fixes (this script is really far from being perfect)
 */
 
 
-function data(node, currentState, attrsFunctions, items) {
+function data(node, currentState, attrsFunctions) {
     const attrs = getAttrs(node);
     const hasAttrs = JSON.stringify(attrs) !== '{}';
     if (hasAttrs) {
-        attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length, items));
-        console.log(attrsFunctions);
+        attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length));
     };
     currentState.push(`
     { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() === "" ? "" : ", textContent: '" + node.textContent + "'") + ` } }`);
@@ -30,10 +29,10 @@ function getAttrs(node) {
     return attrs;
 }
 
-function createAttrsFunction(node, attrs, number, items) {
+function createAttrsFunction(node, attrs, number) {
     return `
     function get`+ toCamelCase(node.tagName) + number + `Attrs(): Components.` + toCamelCase(node.tagName) + ` {
-        return `+ attrsToString(attrs, items) + `;
+        return `+ attrsToString(attrs) + `;
     }
     `;
 };
@@ -42,7 +41,7 @@ function toCamelCase(name) {
     return name.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('');
 };
 
-function attrsToString(attrs, items) {
+function attrsToString(attrs) {
     let string;
     if(Array.isArray(attrs)){
         string = '[ '
@@ -50,7 +49,7 @@ function attrsToString(attrs, items) {
             let value = undefined;
             switch (typeof el) {
                 case 'object':
-                    value = attrsToString(el, items);
+                    value = attrsToString(el);
                     break;
                 case 'function':
                     value = undefined;
@@ -68,14 +67,14 @@ function attrsToString(attrs, items) {
     }else{
         string = '{ ';
         Object.keys(attrs).forEach((key) => {
-            if ((!items && key === 'items') || attrs[key] === null) {
+            if (key === 'items' || attrs[key] === null) {
                 string += key + ': null, ';
                 return;
             }
             let value = undefined;
             switch (typeof attrs[key]) {
                 case 'object':
-                    value = attrsToString(attrs[key], items);
+                    value = attrsToString(attrs[key]);
                     break;
                 case 'function':
                     value = undefined;
@@ -96,7 +95,6 @@ function attrsToString(attrs, items) {
 }
 
 function writeShowcaseFile(data) {
-    console.log(data[0]);
     let file = `
     import { storiesOf } from '@storybook/html';
     import { Components } from '../../../../../../components';
@@ -127,8 +125,8 @@ function writeShowcaseFile(data) {
     return file;
 };
 
-function showcaser(node, items) {
-    const d = data(node, [], [], items);
+function showcaser(node) {
+    const d = data(node, [], []);
 
     return writeShowcaseFile(d);
 };
