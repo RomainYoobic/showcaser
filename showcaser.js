@@ -6,7 +6,6 @@
     You'll probably need to format properly the file and bring some fixes (this script is really far from being perfect)
 */
 
-
 function data(node, currentState, attrsFunctions) {
     const attrs = getAttrs(node);
     const hasAttrs = JSON.stringify(attrs) !== '{}';
@@ -98,7 +97,6 @@ function writeShowcaseFile(data) {
     let file = `
     import { storiesOf } from '@storybook/html';
     import { Components } from '../../../../../../components';
-    import { mobileViewports } from '../../base';
     
     storiesOf('', module)
       .add('', () => {
@@ -106,7 +104,6 @@ function writeShowcaseFile(data) {
     
         grid.heading = '';
         grid.subheading = '';
-        grid.sizes = mobileViewports;
         grid.classList.add('nested-flex');
         grid.rows = [
           {
@@ -117,6 +114,10 @@ function writeShowcaseFile(data) {
           }
         ];
         return grid;
+      },
+      {
+          viewport: { defaultViewport: 'iphonex' },
+          chromatic: { viewports: [812] }
       });
     `;
     for (let i = 0; i < data[1].length; i++) {
