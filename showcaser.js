@@ -14,7 +14,7 @@ function data(node, currentState, attrsFunctions) {
         attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length));
     };
     currentState.push(`
-    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() === "" ? "" : ", textContent: '" + node.textContent + "'") + ` } }`);
+    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() !== "" && node.children.length === 0 ? ", textContent: '" + node.textContent + "'" : "") + ` } }`);
     for (let i = 0; i < node.children.length; i++) {
         data(node.children[i], currentState, attrsFunctions);
     }
