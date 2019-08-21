@@ -6,128 +6,192 @@
     You'll probably need to format properly the file and bring some fixes (this script is really far from being perfect)
 */
 
-function data(node, currentState, attrsFunctions) {
-    const attrs = getAttrs(node);
-    const hasAttrs = JSON.stringify(attrs) !== '{}';
-    if (hasAttrs) {
-        attrsFunctions.push(createAttrsFunction(node, attrs, currentState.length));
-    };
-    currentState.push(`
-    { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() !== "" && node.children.length === 0 ? ", textContent: '" + node.textContent + "'" : "") + ` } }`);
-    for (let i = 0; i < node.children.length; i++) {
-        data(node.children[i], currentState, attrsFunctions);
-    }
-    return [currentState, attrsFunctions];
-};
+function data(node, attrsFunctions) {
+  const attrs = getAttrs(node);
+  const hasAttrs = JSON.stringify(attrs) !== '{}';
+  // currentState.push(`
+  // { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() !== "" && node.children.length === 0 ? ", textContent: '" + node.textContent + "'" : "") + ` } }`);
+  const children = [];
+  for (let i = 0; i < node.children.length; i++) {
+    children.push(
+      data(node.children[i], attrsFunctions)[0]
+    );
+  }
+  const el =
+    `{ tag: '` +
+    node.tagName.toLowerCase() +
+    `', style: '` +
+    node.style.cssText +
+    `', classList: '` +
+    Array(node.classList).join(' ') +
+    `', attrs: { ` +
+    (hasAttrs
+      ? ` ...get` +
+        toCamelCase(node.tagName) +
+        attrsFunctions.length +
+        `Attrs(), `
+      : ``) +
+    (node.textContent.trim() !== '' &&
+    node.children.length === 0
+      ? ` textContent: '` +
+        node.textContent +
+        `', `
+      : ``) +
+    (node.slot !== ''
+      ? ` slot: '` + node.slot + `', `
+      : ``) +
+    ` }, ` +
+    (children.length > 0
+      ? `children: [` + Array(children) + `]`
+      : ``) +
+    ` }`;
 
-function getAttrs(node) {
-    let attrs = {};
-    try{
-        attrs = Object.keys(customElements.get(node.tagName.toLowerCase()).prototype).reduce((state, key) => ({ ...state, [key]: node[key] }), {});
-    }catch(err){}
-    return attrs;
+  if (hasAttrs) {
+    attrsFunctions.push(
+      createAttrsFunction(
+        node,
+        attrs,
+        attrsFunctions.length
+      )
+    );
+  }
+  return [el, attrsFunctions];
 }
 
-function createAttrsFunction(node, attrs, number) {
-    return `
-    function get`+ toCamelCase(node.tagName) + number + `Attrs(): Components.` + toCamelCase(node.tagName) + ` {
-        return `+ attrsToString(attrs) + `;
-    }
+function getAttrs(node) {
+  let attrs = {};
+  try {
+    attrs = Object.keys(
+      customElements.get(
+        node.tagName.toLowerCase()
+      ).prototype
+    ).reduce(
+      (state, key) => ({
+        ...state,
+        [key]: node[key]
+      }),
+      {}
+    );
+  } catch (err) {}
+  return attrs;
+}
+
+function createAttrsFunction(
+  node,
+  attrs,
+  number
+) {
+  return (
+    `
+function get` +
+    toCamelCase(node.tagName) +
+    number +
+    `Attrs(): Components.` +
+    toCamelCase(node.tagName) +
+    ` {
+    return ` +
+    attrsToString(attrs) +
     `;
-};
+}`
+  );
+}
 
 function toCamelCase(name) {
-    return name.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('');
-};
+  return name
+    .split('-')
+    .map(
+      word =>
+        word.charAt(0).toUpperCase() +
+        word.slice(1).toLowerCase()
+    )
+    .join('');
+}
 
 function attrsToString(attrs) {
-    let string;
-    if(Array.isArray(attrs)){
-        string = '[ '
-        attrs.forEach((el) => {
-            let value = undefined;
-            switch (typeof el) {
-                case 'object':
-                    value = attrsToString(el);
-                    break;
-                case 'function':
-                    value = undefined;
-                    break;
-                case 'string':
-                    value = "'" + el + "'";
-                    break;
-                default:
-                    value = el;
-                    break;
-            }
-            string += value + ', ';
-        });
-        string += ' ]';
-    }else{
-        string = '{ ';
-        Object.keys(attrs).forEach((key) => {
-            if (key === 'items' || attrs[key] === null) {
-                string += key + ': null, ';
-                return;
-            }
-            let value = undefined;
-            switch (typeof attrs[key]) {
-                case 'object':
-                    value = attrsToString(attrs[key]);
-                    break;
-                case 'function':
-                    value = undefined;
-                    break;
-                case 'string':
-                    value = "'" + attrs[key] + "'";
-                    break;
-                default:
-                    value = attrs[key];
-                    break;
-            }
-            string += "'" + key + "'" + ': ' + value + ', ';
-        });
-        string += ' }';
-    }
-    
-    return string;
+  let string;
+  if (Array.isArray(attrs)) {
+    string = '[ ';
+    attrs.forEach(el => {
+      let value = undefined;
+      switch (typeof el) {
+        case 'object':
+          value = attrsToString(el);
+          break;
+        case 'function':
+          value = undefined;
+          break;
+        case 'string':
+          value = "'" + el + "'";
+          break;
+        default:
+          value = el;
+          break;
+      }
+      string += value + ', ';
+    });
+    string += ' ]';
+  } else {
+    string = '{ ';
+    Object.keys(attrs).forEach(key => {
+      if (key === 'attributeChangedCallback') {
+        return;
+      }
+      if (
+        key === 'items' ||
+        attrs[key] === null
+      ) {
+        string += key + ': null, ';
+        return;
+      }
+      let value = undefined;
+      switch (typeof attrs[key]) {
+        case 'object':
+          value = attrsToString(attrs[key]);
+          break;
+        case 'function':
+          value = undefined;
+          break;
+        case 'string':
+          value = "'" + attrs[key] + "'";
+          break;
+        default:
+          value = attrs[key];
+          break;
+      }
+      string +=
+        "'" + key + "'" + ': ' + value + ', ';
+    });
+    string += ' }';
+  }
+
+  return string;
 }
 
 function writeShowcaseFile(data) {
-    let file = `
-    import { storiesOf } from '@storybook/html';
-    import { Components } from '../../../../../../components';
-    
-    storiesOf('', module)
-      .add('', () => {
-        const grid = document.createElement('yoo-storybook-grid');
-    
-        grid.heading = '';
-        grid.subheading = '';
-        grid.classList.add('nested-flex');
-        grid.rows = [
-          {
-            items: [
-              [${data[0]}
-              ]
-            ]
-          }
-        ];
-        return grid;
-      },
-      {
-          viewport: { defaultViewport: 'iphonex' },
-          chromatic: { viewports: [812] }
-      });
-    `;
-    for (let i = 0; i < data[1].length; i++) {
-        file += data[1][i];
+  let file = `import { storiesOf } from '@storybook/html';
+import { Components } from '../../../../../../components';
+import { fromListToDOM } from '../../../base';
+
+storiesOf('', module)
+    .add('', () => {
+        const dom = ${data[0]}
+            
+        return fromListToDOM(dom);
+    },
+    {
+        viewport: { defaultViewport: 'iphonex' },
+        chromatic: { viewports: [375] }
     }
-    return file;
-};
+);
+`;
+  for (let i = 0; i < data[1].length; i++) {
+    file += data[1][i];
+  }
+  return file;
+}
 
 function showcaser(node) {
-    const d = data(node, [], []);
+  const d = data(node, []);
 
-    return writeShowcaseFile(d);
-};
+  return writeShowcaseFile(d);
+}
