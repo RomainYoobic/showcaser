@@ -9,8 +9,6 @@
 function data(node, attrsFunctions) {
   const attrs = getAttrs(node);
   const hasAttrs = JSON.stringify(attrs) !== '{}';
-  // currentState.push(`
-  // { isParent: ` + (node.children.length > 0) + `, childrenCount: ` + node.children.length + `, tag: '` + node.tagName.toLowerCase() + `', attrs: {` + (hasAttrs ? ' ...get' + toCamelCase(node.tagName) + currentState.length + 'Attrs(),' : '') + ` classList: '` + Array(node.classList).join(' ') + `'` + (node.style.cssText === '' ? '' : ', style: { ' + node.style.cssText + ' }') + (node.textContent.trim() !== "" && node.children.length === 0 ? ", textContent: '" + node.textContent + "'" : "") + ` } }`);
   const children = [];
   for (let i = 0; i < node.children.length; i++) {
     children.push(
@@ -18,13 +16,11 @@ function data(node, attrsFunctions) {
     );
   }
   const el =
-    `{ tag: '` +
-    node.tagName.toLowerCase() +
-    `', style: '` +
-    node.style.cssText +
-    `', classList: '` +
-    Array(node.classList).join(' ') +
-    `', attrs: { ` +
+    `{ tag: '` + node.tagName.toLowerCase()+`'`+
+    ( node.style.cssText ? `, style: '`+node.style.cssText+`'` : `` ) +
+    ( node.classList.length !== 0 ? `, classList: '`+Array(node.classList).join(' ')+`'` : `` ) +
+    (hasAttrs || (node.textContent.trim() !== '' && node.children.length === 0) || node.slot !== '' ? 
+    `, attrs: { ` +
     (hasAttrs
       ? ` ...get` +
         toCamelCase(node.tagName) +
@@ -33,16 +29,16 @@ function data(node, attrsFunctions) {
       : ``) +
     (node.textContent.trim() !== '' &&
     node.children.length === 0
-      ? ` textContent: '` +
+      ? `textContent: '` +
         node.textContent +
         `', `
       : ``) +
     (node.slot !== ''
-      ? ` slot: '` + node.slot + `', `
+      ? `slot: '` + node.slot + `'`
       : ``) +
-    ` }, ` +
+    ` }` : ``) +
     (children.length > 0
-      ? `children: [` + Array(children) + `]`
+      ? `, children: [` + Array(children) + `]`
       : ``) +
     ` }`;
 
@@ -170,7 +166,7 @@ function attrsToString(attrs) {
 function writeShowcaseFile(data) {
   let file = `import { storiesOf } from '@storybook/html';
 import { Components } from '../../../../../../components';
-import { fromListToDOM } from '../../../base';
+import { fromListToDOM } from '../../base';
 
 storiesOf('', module)
     .add('', () => {
