@@ -171,7 +171,7 @@ import { fromListToDOM } from '../../base';
 storiesOf('', module)
     .add('', () => {
         const dom = ${data[0]}
-            
+
         return fromListToDOM(dom);
     },
     {
