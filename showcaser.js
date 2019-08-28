@@ -9,11 +9,13 @@
 function data(node, attrsFunctions) {
   const attrs = getAttrs(node);
   const hasAttrs = JSON.stringify(attrs) !== '{}';
+  let hasOwnTextContent = node.textContent.trim() !== '';
   const children = [];
   for (let i = 0; i < node.children.length; i++) {
     children.push(
       data(node.children[i], attrsFunctions)[0]
     );
+    hasOwnTextContent = hasOwnTextContent && node.children[i].textContent !== node.textContent;
   }
   const el =
     `{ tag: '` + node.tagName.toLowerCase()+`'`+
@@ -27,8 +29,7 @@ function data(node, attrsFunctions) {
         attrsFunctions.length +
         `Attrs(), `
       : ``) +
-    (node.textContent.trim() !== '' &&
-    node.children.length === 0
+    (hasOwnTextContent
       ? `textContent: '` +
         node.textContent +
         `', `
