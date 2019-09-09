@@ -3,12 +3,15 @@
     Select the root node of the component you want to make a story of
     Call 'showcaser($0)' in the chrome console
 
-    You'll probably need to format properly the file and bring some fixes (this script is really far from being perfect)
+    You'll probably need to format properly the file and bring some fixes (this script is far from being perfect)
 */
 
 function data(node, attrsFunctions) {
   const attrs = getAttrs(node);
-  const hasAttrs = JSON.stringify(attrs) !== '{}';
+  let hasAttrs = true;
+  try {
+    hasAttrs = JSON.stringify(attrs) !== '{}';
+  }catch(e){}
   let hasOwnTextContent = node.textContent.trim() !== '';
   const children = [];
   for (let i = 0; i < node.children.length; i++) {
