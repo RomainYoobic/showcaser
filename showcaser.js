@@ -137,7 +137,7 @@ function attrsToString(attrs) {
         return;
       }
       if (
-        key === 'items' ||
+        key === 'items' || key === 'injector' ||
         attrs[key] === null
       ) {
         string += key + ': null, ';
@@ -170,17 +170,17 @@ function attrsToString(attrs) {
 function writeShowcaseFile(data) {
   let file = `import { storiesOf } from '@storybook/html';
 import { Components } from '../../../../../../components';
-import { fromListToDOM } from '../../base';
+import { fromListToDOM, parameters } from '../../base';
 
 storiesOf('', module)
+    .addParameters(parameters.mobile)
     .add('', () => {
         const dom = ${data[0]}
 
         return fromListToDOM(dom);
     },
     {
-        viewport: { defaultViewport: 'iphonex' },
-        chromatic: { viewports: [375] }
+      chromatic: { delay: 1000 }
     }
 );
 `;
