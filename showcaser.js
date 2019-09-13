@@ -137,7 +137,7 @@ function attrsToString(attrs) {
         return;
       }
       if (
-        key === 'items' || key === 'injector' ||
+        key === 'items' || key === 'injector' || key === '_tenant' ||
         attrs[key] === null
       ) {
         string += key + ': null, ';
